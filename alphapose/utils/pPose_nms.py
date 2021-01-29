@@ -233,7 +233,7 @@ def pose_nms(bboxes, bbox_scores, bbox_ids, pose_preds, pose_scores, areaThres=0
     pose_scores[pose_scores == 0] = 1e-5
     kp_nums = pose_preds.size()[1]
     res_bboxes, res_bbox_scores, res_bbox_ids, res_pose_preds, res_pose_scores, res_pick_ids = [],[],[],[],[],[]
-    
+
     ori_bboxes = bboxes.clone()
     ori_bbox_scores = bbox_scores.clone()
     ori_bbox_ids = bbox_ids.clone()
@@ -254,7 +254,7 @@ def pose_nms(bboxes, bbox_scores, bbox_ids, pose_preds, pose_scores, areaThres=0
 
     human_ids = np.arange(nsamples)
     mask = np.ones(len(human_ids)).astype(bool)
-    
+
     # Do pPose-NMS
     pick = []
     merge_ids = []
@@ -324,7 +324,7 @@ def pose_nms(bboxes, bbox_scores, bbox_ids, pose_preds, pose_scores, areaThres=0
         res_pose_scores.append(merge_score)
         res_pick_ids.append(pick[j])
 
- 
+
 
     return res_bboxes, res_bbox_scores, res_bbox_ids, res_pose_preds, res_pose_scores, res_pick_ids
 
@@ -427,7 +427,7 @@ def p_merge_fast(ref_pose, cluster_preds, cluster_scores, ref_dist):
     ))
 
     kp_num = ref_pose.size()[0]
-    ref_dist = min(ref_dist, 15)
+    ref_dist = float(min(ref_dist, 15))
 
     mask = (dist <= ref_dist)
     final_pose = torch.zeros(kp_num, 2)
