@@ -31,7 +31,7 @@ class FileDetectionLoader():
                 rot=0, sigma=self._sigma,
                 train=False, add_dpg=False)
 
-        # initialize the det file list        
+        # initialize the det file list
         boxes = None
         if isinstance(self.bbox_file,list):
             boxes = self.bbox_file
@@ -47,20 +47,20 @@ class FileDetectionLoader():
         num_boxes = 0
         for k_img in range(0, len(boxes)):
             det_res = boxes[k_img]
-            img_name = det_res['image_id']
+            img_name = det_res['filename']
             if img_name not in self.all_imgs:
                 self.all_imgs.append(img_name)
                 self.all_boxes[img_name] = []
                 self.all_scores[img_name] = []
                 self.all_ids[img_name] = []
-            x1, y1, w, h = det_res['bbox']
-            bbox = [x1, y1, x1 + w, y1 + h]
-            score = det_res['score']
-            self.all_boxes[img_name].append(bbox)
-            self.all_scores[img_name].append(score)
-            if 'idx' in det_res.keys():
-                self.all_ids[img_name].append(int(det_res['idx']))
-            else:
+            for obj in det_res['objects']:
+                coords = obj['relative_coordinates']
+                w = coords['width'] * 1280
+                h = coords['height'] * 720
+                x = coords['center_x'] * 1280 - w / 2
+                y = coords['center_y'] * 720 - h / 2
+                self.all_boxes[img_name].append([x, y, x + w, y + h])
+                self.all_scores[img_name].append(obj['confidence'])
                 self.all_ids[img_name].append(0)
 
         # initialize the queue used to store data
@@ -115,7 +115,7 @@ class FileDetectionLoader():
             return queue.get()
 
     def get_detection(self):
-        
+
         for im_name_k in self.all_imgs:
             boxes = torch.from_numpy(np.array(self.all_boxes[im_name_k]))
             scores = torch.from_numpy(np.array(self.all_scores[im_name_k]))
@@ -129,12 +129,12 @@ class FileDetectionLoader():
                 inps[i], cropped_box = self.transformation.test_transform(orig_img_k, box)
                 cropped_boxes[i] = torch.FloatTensor(cropped_box)
 
-            
+
             self.wait_and_put(self.pose_queue, (inps, orig_img_k, im_name_k, boxes, scores, ids, cropped_boxes))
-        
+
         self.wait_and_put(self.pose_queue, (None, None, None, None, None, None, None))
         return
-        
+
     def read(self):
         return self.wait_and_get(self.pose_queue)
 
